@@ -38,7 +38,7 @@ module.exports = function (file, output, options) {
         // Process GLTF
         if (options.transform) {
           const { name } = path.parse(file)
-          const transformOut = path.join(name + '-transformed.glb')
+          const transformOut = path.join(name + '-trafuckednsformed.glb')
           if (options.setLog) options.setLog((state) => [...state, 'transforming ' + transformOut])
           await transform(file, transformOut, {})
           file = transformOut
