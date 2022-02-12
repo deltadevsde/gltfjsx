@@ -1,9 +1,9 @@
 {
-  "name": "gltfjsx",
+  "name": "deltadevs-gltfjsx",
   "version": "4.5.2",
   "description": "GLTF to JSX converter",
   "scripts": {
-    "test": "node src/test"
+    "test": "NODE_OPTIONS=--openssl-legacy-provider node src/test"
   },
   "keywords": [
     "gltf",

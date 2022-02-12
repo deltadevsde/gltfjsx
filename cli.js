@@ -10,7 +10,7 @@ const App = importJsx('./src/components/App')
 const cli = meow(
   `
 	Usage
-	  $ npx gltfjsx [Model.js] [options]
+	  $ npx deltadevs-gltfjsx [Model.js] [options]
 
 	Options
     --types, -t         Add Typescript definitions

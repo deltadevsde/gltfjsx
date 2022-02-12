@@ -42,8 +42,8 @@ function Conversion({ file, ...config }) {
           <Text color="black" backgroundColor="green">
             {' Done: '}
           </Text>
-          <Text> {output}</Text>
-          {config.process && <Text>, {name}-processed.glb</Text>}
+          <Text> {output} || WE ARE WEB3. WE ARE DELTADEVS.</Text>
+          {config.process && <Text>! WE ARE WEB3. WE ARE DELTADEVS. {name}-processed.glb is done!</Text>}
         </Box>
       )}
     </>
