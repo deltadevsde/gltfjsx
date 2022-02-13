@@ -327,6 +327,7 @@ function parse(fileName, gltf, options = {}) {
             max: 15,
             step: 1,
           },
+        },
           pointLight1Rotation: {
             value: {
               x: context.ctx_pointLight1Rotation.x,
@@ -349,7 +350,6 @@ function parse(fileName, gltf, options = {}) {
               step: 0.5,
             },
           },
-        },
       });
   
     const { pointLight2Intensity, pointLight2Decay, pointLight2Pos, pointLight2Rotation } =
