@@ -437,19 +437,92 @@ function parse(fileName, gltf, options = {}) {
       .flatMap((str) => str.replaceAll(/\s/g, '').split(','))
   }
 
-  function intializeVariableState(objects, obj) {
+  function intializeVariableState(objects, types, obj) {
     let materials = [...new Set(objects.filter((o) => o.material && o.material.name).map((o) => o.material))]
     return materials.map((mat, i) => {
       let hasClearCoat = mat.hasOwnProperty('clearcoat')
       let hasClearCoatRoughness = mat.hasOwnProperty('clearcoatRoughness')
       return `
-        ctx_metalness${i}: -1,
-        ctx_roughness${i}: 1,
-        ${hasClearCoat ? `ctx_clearcoat${i}: 0,` : ``} 
-        ${hasClearCoatRoughness ? `ctx_clearcoatRoughness${i}: 0,` : ``}
-        ctx_model_color${i}: { r: 255, b: 255, g: 255 }
+        ctx_metalness${i}: ${types ? 'number' : '-1'},
+        ctx_roughness${i}: ${types ? 'number' : '1'},
+        ${hasClearCoat ? `ctx_clearcoat${i}: ${types ? 'number' : '0'},` : ``} 
+        ${hasClearCoatRoughness ? `ctx_clearcoatRoughness${i}: ${types ? 'number' : '0'},` : ``}
+        ctx_model_color${i}: ${types ? '{r:number, b:number, g:number}' : '{ r: 255, b: 255, g: 255 }'}
         `
     })
+  }
+
+  function createContext(objects, types, obj) {
+    return `
+    ${intializeVariableState(objects, types, obj)
+      .map((i) => i)
+      .join(',')},
+      ctx_model_position: ${
+        types
+          ? `[${typeof rNbr(obj.position.x)}, ${typeof rNbr(obj.position.y)}, ${typeof rNbr(obj.position.z)}]`
+          : `[${rNbr(obj.position.x)}, ${rNbr(obj.position.y)}, ${rNbr(obj.position.z)}]`
+      },
+  ctx_model_rotation: ${
+    types
+      ? `[${typeof rNbr(obj.rotation.x)}, ${typeof rNbr(obj.rotation.y)}, ${typeof rNbr(obj.rotation.z)}]`
+      : `[${rNbr(obj.rotation.x)}, ${rNbr(obj.rotation.y)}, ${rNbr(obj.rotation.z)}]`
+  },
+  ctx_model_scale: ${
+    obj.scale.x === obj.scale.y && obj.scale.x === obj.scale.z
+      ? types
+        ? typeof rNbr(obj.scale.x)
+        : rNbr(obj.scale.x)
+      : types
+      ? `[${typeof rNbr(obj.scale.x)}, ${typeof rNbr(obj.scale.y)}, ${typeof rNbr(obj.scale.z)}]`
+      : `[${rNbr(obj.scale.x)}, ${rNbr(obj.scale.y)}, ${rNbr(obj.scale.z)}]`
+  },
+    ctx_pointLight1Intensity: ${types ? typeof 0 : '0'} ,
+    ctx_pointLight1Decay: ${types ? typeof 0 : '0'} ,
+    ctx_pointLight1Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_pointLight2Intensity: ${types ? typeof 0 : '0'} ,
+    ctx_pointLight2Decay: ${types ? typeof 0 : '0'} ,
+    ctx_pointLight2Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_spotLightIntensity: ${types ? typeof 0 : '0'} ,
+    ctx_spotLightDecay: ${types ? typeof 0 : '0'} ,
+    ctx_spotLightPos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_backgroundGradient: ${types ? typeof true : 'true'} ,
+    ctx_color1: ${types ? `{ r: ${typeof 2}, b: ${typeof 132}, g: ${typeof 199} }` : '{ r: 2, b: 132, g: 199 }'} ,
+    ctx_color2: ${types ? `{ r: ${typeof 125}, b: ${typeof 211}, g: ${typeof 252} }` : '{ r: 125, b: 211, g: 252 }'} ,
+    ctx_positionSpotLight: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[3, 10, 3]'} ,
+    ctx_angleSpotLight: ${types ? typeof 0.5 : '0.5'} ,
+    ctx_penumbraSpotLight: ${types ? typeof 1 : '1'} ,
+    ctx_intensitySpotLight: ${types ? typeof 0.2 : '0.2'} ,
+    ctx_positionPointLightOne: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[10, 7, 10]'} ,
+    ctx_intensityPointLightOne: ${types ? typeof 0.2 : '0.2'} ,
+    ctx_positionPointLightTwo: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[5, 0.5, 5]'} ,
+    ctx_intensityPointLightTwo: ${types ? typeof 1 : '1'} ,
+    ctx_positionCloudOne: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[3, 10, 3]'} ,
+    ctx_opacityCloudOne: ${types ? typeof 0.2 : '0.2'} ,
+    ctx_rotationSpeedCloudOne: ${types ? typeof 0.4 : '0.4'} ,
+    ctx_widthCloudOne: ${types ? typeof 1 : '1'},
+    ctx_depthCloudOne: ${types ? typeof 1.5 : '1.5'},
+    ctx_segmentsCloudOne: ${types ? typeof 2 : '2'},
+    ctx_positionCloudTwo: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[-8, 8, -6]'},
+    ctx_opacityCloudTwo: ${types ? typeof 0.2 : '0.2'},
+    ctx_rotationSpeedCloudTwo: ${types ? typeof 0.4 : '0.4'},
+    ctx_widthCloudTwo: ${types ? typeof 1 : '1'},
+    ctx_depthCloudTwo: ${types ? typeof 1.5 : '1.5'} ,
+    ctx_segmentsCloudTwo: ${types ? typeof 1 : '1'},
+    ctx_positionCloudThree: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[-3, 15, -3]'} ,
+    ctx_opacityCloudThree: ${types ? typeof 0.2 : '0.2'},
+    ctx_rotationSpeedCloudThree: ${types ? typeof 0.4 : '0.4'},
+    ctx_widthCloudThree: ${types ? typeof 2 : '2'},
+    ctx_depthCloudThree: ${types ? typeof 1 : '1'},
+    ctx_segmentsCloudThree: ${types ? typeof 6 : '6'},
+    ctx_radiusStars: ${types ? typeof 100 : '100'},
+    ctx_depthStars: ${types ? typeof 25 : '25'},
+    ctx_countStars: ${types ? typeof 5000 : '5000'},
+    ctx_factorStars: ${types ? typeof 4 : '4'},
+    ctx_saturationStars: ${types ? typeof 1 : '1'},
+    ctx_fadeStars: ${types ? typeof true : 'true'}
+
+    
+    `
   }
 
   function printAnimations(animations) {
@@ -492,7 +565,7 @@ function parse(fileName, gltf, options = {}) {
     useEffect(() => \{
     ${variableControlNames.map((variableName) => "context['" + variableName + "'] = " + variableName + ';').join('')}
   \})` */
-  const contextVariables = intializeVariableState(objects, gltf.scene)
+  let typeContext = createContext(objects, true, gltf.scene)
 
   return `
         ${options.types ? `\nimport * as THREE from 'three'` : ''}
@@ -548,63 +621,8 @@ function parse(fileName, gltf, options = {}) {
             : ''
         }
 
-        const PropContext = React.createContext<any>({
-            ${contextVariables.map((i) => i).join(',')},
-            ctx_model_position: [${rNbr(gltf.scene.position.x)}, ${rNbr(gltf.scene.position.y)}, ${rNbr(
-    gltf.scene.position.z
-  )}],
-        ctx_model_rotation: [${rDeg(gltf.scene.rotation.x)}, ${rDeg(gltf.scene.rotation.y)}, ${rDeg(
-    gltf.scene.rotation.z
-  )}],
-        ctx_model_scale: ${
-          gltf.scene.scale.x === gltf.scene.scale.y && gltf.scene.scale.x === gltf.scene.scale.z
-            ? rNbr(gltf.scene.scale.x)
-            : [rDeg(gltf.scene.rotation.x), rDeg(gltf.scene.rotation.y), rDeg(gltf.scene.rotation.z)]
-        },
-            ctx_pointLight1Intensity: 0,
-            ctx_pointLight1Decay: 0,
-            ctx_pointLight1Pos: { x: 0, y: 2, z: 1.5 },
-            ctx_pointLight2Intensity: 0,
-            ctx_pointLight2Decay: 0,
-            ctx_pointLight2Pos: { x: 0, y: 2, z: 1.5 },
-            ctx_spotLightIntensity: 0,
-            ctx_spotLightDecay: 0,
-            ctx_spotLightPos: { x: 0, y: 2, z: 1.5 },
-            ctx_backgroundGradient: true,
-            ctx_color1: { r: 2, g: 132, b: 199 },
-            ctx_color2: { r: 125, g: 211, b: 252 },
-            ctx_positionSpotLight: [3, 10, 3],
-            ctx_angleSpotLight: 0.5,
-            ctx_penumbraSpotLight: 1,
-            ctx_intensitySpotLight: 0.2,
-            ctx_positionPointLightOne: [10, 7, 10],
-            ctx_intensityPointLightOne: 0.2,
-            ctx_positionPointLightTwo: [5, 0.5, 5],
-            ctx_intensityPointLightTwo: 1,
-            ctx_positionCloudOne: [3, 10, 3],
-            ctx_opacityCloudOne: 0.2,
-            ctx_rotationSpeedCloudOne: 0.4,
-            ctx_widthCloudOne: 1,
-            ctx_depthCloudOne: 1.5,
-            ctx_segmentsCloudOne: 2,
-            ctx_positionCloudTwo: [-8, 8, -6],
-            ctx_opacityCloudTwo: 0.2,
-            ctx_rotationSpeedCloudTwo: 0.4,
-            ctx_widthCloudTwo: 1,
-            ctx_depthCloudTwo: 1.5,
-            ctx_segmentsCloudTwo: 1,
-            ctx_positionCloudThree: [-3, 15, -3],
-            ctx_opacityCloudThree: 0.2,
-            ctx_rotationSpeedCloudThree: 0.4,
-            ctx_widthCloudThree: 2,
-            ctx_depthCloudThree: 1,
-            ctx_segmentsCloudThree: 6,
-            ctx_radiusStars: 100,
-            ctx_depthStars: 25,
-            ctx_countStars: 5000,
-            ctx_factorStars: 4,
-            ctx_saturationStars: 1,
-            ctx_fadeStars: true
+        const PropContext = React.createContext<{${typeContext}}>({
+          ${createContext(objects, false, gltf.scene)}
         });
 
         function Model({ ${hasInstances ? 'instances, ' : ''}...props }${
@@ -757,7 +775,7 @@ useGLTF.preload('${url}')
     Cloud1: folder({
       positionCloudOne: context.ctx_positionCloudOne,
       opacityCloudOne: {
-        value: context.ctx_positionCloudOne,
+        value: context.ctx_opacityCloudOne,
         min: 0,
         max: 1,
         step: 0.1,
@@ -933,12 +951,12 @@ useGLTF.preload('${url}')
             style={{
               background:\`\${
                 backgroundGradient
-                  ? \`linear-gradient(to left, \${rgbToHex(color1.r, color1.g, color1.b)}, \${rgbToHex(
+                  ? \`linear-gradient(to left, \${rgbToHex(color1.r, color1.b, color1.g)}, \${rgbToHex(
                       color2.r,
-                      color2.g,
-                      color2.b
+                      color2.b,
+                      color2.g
                       )})\`
-                  : rgbToHex(color1.r, color1.g, color1.b)
+                  : rgbToHex(color1.r, color1.b, color1.g)
               }\`,
             }}
           >
