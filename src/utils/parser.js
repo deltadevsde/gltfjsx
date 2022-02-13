@@ -561,8 +561,8 @@ function parse(fileName, gltf, options = {}) {
       types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: -Math.PI, z: 0 }'
     } ,
     ctx_backgroundGradient: ${types ? typeof true : 'true'} ,
-    ctx_color1: ${types ? `{ r: ${typeof 2}, b: ${typeof 132}, g: ${typeof 199} }` : '{ r: 2, b: 132, g: 199 }'} ,
-    ctx_color2: ${types ? `{ r: ${typeof 125}, b: ${typeof 211}, g: ${typeof 252} }` : '{ r: 125, b: 211, g: 252 }'} ,
+    ctx_color1: ${types ? `{ r: ${typeof 2}, g: ${typeof 132}, b: ${typeof 199} }` : '{ r: 2, g: 132, b: 199 }'} ,
+    ctx_color2: ${types ? `{ r: ${typeof 125}, g: ${typeof 211}, b: ${typeof 252} }` : '{ r: 125, g: 211, b: 252 }'} ,
     ctx_positionSpotLight: ${types ? `[${typeof 3}, ${typeof 10}, ${typeof 3}]` : '[3, 10, 3]'} ,
     ctx_angleSpotLight: ${types ? typeof 0.5 : '0.5'} ,
     ctx_penumbraSpotLight: ${types ? typeof 1 : '1'} ,
@@ -1026,12 +1026,12 @@ useGLTF.preload('${url}')
             style={{
               background:\`\${
                 backgroundGradient
-                  ? \`linear-gradient(to left, \${rgbToHex(color1.r, color1.b, color1.g)}, \${rgbToHex(
+                  ? \`linear-gradient(to left, \${rgbToHex(color1.r, color1.g, color1.b)}, \${rgbToHex(
                       color2.r,
-                      color2.b,
-                      color2.g
+                      color2.g,
+                      color2.b
                       )})\`
-                  : rgbToHex(color1.r, color1.b, color1.g)
+                  : rgbToHex(color1.r, color1.g, color1.b)
               }\`,
             }}
           >
