@@ -292,7 +292,7 @@ function parse(fileName, gltf, options = {}) {
     ${materialControls.join('')}
     
 
-    const { pointLight1Intensity, pointLight1Decay, pointLight1Pos } =
+    const { pointLight1Intensity, pointLight1Decay, pointLight1Pos, pointLight1Rotation } =
       useControls('PointLight1', {
         pointLight1Intensity: {
           value: context.ctx_pointLight1Intensity,
@@ -327,10 +327,32 @@ function parse(fileName, gltf, options = {}) {
             max: 15,
             step: 1,
           },
+          pointLight1Rotation: {
+            value: {
+              x: context.ctx_pointLight1Rotation.x,
+              y: context.ctx_pointLight1Rotation.y,
+              z: context.ctx_pointLight1Rotation.z,
+            },
+            x: {
+              min: -15,
+              max: 15,
+              step: 0.5,
+            },
+            y: {
+              min: -15,
+              max: 15,
+              step: 0.5,
+            },
+            z: {
+              min: -15,
+              max: 15,
+              step: 0.5,
+            },
+          },
         },
       });
   
-    const { pointLight2Intensity, pointLight2Decay, pointLight2Pos } =
+    const { pointLight2Intensity, pointLight2Decay, pointLight2Pos, pointLight2Rotation } =
       useControls('PointLight2', {
         pointLight2Intensity: {
           value: context.ctx_pointLight2Intensity,
@@ -366,9 +388,31 @@ function parse(fileName, gltf, options = {}) {
             step: 1,
           },
         },
+        pointLight2Rotation: {
+          value: {
+            x: context.ctx_pointLight2Rotation.x,
+            y: context.ctx_pointLight2Rotation.y,
+            z: context.ctx_pointLight2Rotation.z,
+          },
+          x: {
+            min: -15,
+            max: 15,
+            step: 0.5,
+          },
+          y: {
+            min: -15,
+            max: 15,
+            step: 0.5,
+          },
+          z: {
+            min: -15,
+            max: 15,
+            step: 0.5,
+          },
+        },
       });
   
-    const { spotLightIntensity, spotLightDecay, spotLightPos } = useControls(
+    const { spotLightIntensity, spotLightDecay, spotLightPos, spotLightRotation } = useControls(
       'Spot Light',
       {
         spotLightIntensity: {
@@ -403,6 +447,28 @@ function parse(fileName, gltf, options = {}) {
             min: -15,
             max: 15,
             step: 1,
+          },
+        },
+        spotLightRotation: {
+          value: {
+            x: context.ctx_spotLightRotation.x,
+            y: context.ctx_spotLightRotation.y,
+            z: context.ctx_spotLightRotation.z,
+          },
+          x: {
+            min: -15,
+            max: 15,
+            step: 0.5,
+          },
+          y: {
+            min: -15,
+            max: 15,
+            step: 0.5,
+          },
+          z: {
+            min: -15,
+            max: 15,
+            step: 0.5,
           },
         },
       }
@@ -479,12 +545,21 @@ function parse(fileName, gltf, options = {}) {
     ctx_pointLight1Intensity: ${types ? typeof 0 : '0'} ,
     ctx_pointLight1Decay: ${types ? typeof 0 : '0'} ,
     ctx_pointLight1Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_pointLight1Rotation: ${
+      types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: -Math.PI, y: -Math.PI, z: -Math.PI }'
+    } ,
     ctx_pointLight2Intensity: ${types ? typeof 0 : '0'} ,
     ctx_pointLight2Decay: ${types ? typeof 0 : '0'} ,
     ctx_pointLight2Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_pointLight2Rotation: ${
+      types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: -Math.PI, y: -Math.PI, z: -Math.PI }'
+    } ,
     ctx_spotLightIntensity: ${types ? typeof 0 : '0'} ,
     ctx_spotLightDecay: ${types ? typeof 0 : '0'} ,
     ctx_spotLightPos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_spotLightRotation: ${
+      types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: -Math.PI, z: 0 }'
+    } ,
     ctx_backgroundGradient: ${types ? typeof true : 'true'} ,
     ctx_color1: ${types ? `{ r: ${typeof 2}, b: ${typeof 132}, g: ${typeof 199} }` : '{ r: 2, b: 132, g: 199 }'} ,
     ctx_color2: ${types ? `{ r: ${typeof 125}, b: ${typeof 211}, g: ${typeof 252} }` : '{ r: 125, b: 211, g: 252 }'} ,
@@ -646,20 +721,20 @@ function parse(fileName, gltf, options = {}) {
                     intensity={pointLight1Intensity}
                     decay={pointLight1Decay}
                     position={[pointLight1Pos.x, pointLight1Pos.y, pointLight1Pos.z]}
-                    rotation={[-Math.PI, -Math.PI, -Math.PI]}
+                    rotation={[pointLight1Rotation.x, pointLight1Rotation.y, pointLight1Rotation.z]}
                   />
                   <pointLight
                     intensity={pointLight2Intensity}
                     decay={pointLight2Decay}
                     position={[pointLight2Pos.x, pointLight2Pos.y, pointLight2Pos.z]}
-                    rotation={[-Math.PI, -Math.PI, -Math.PI]}
+                    rotation={[pointLight2Rotation.x, pointLight2Rotation.y, pointLight2Rotation.z]}
                   />
                   <spotLight
                     intensity={spotLightIntensity}
                     angle={Math.PI / 10}
                     decay={spotLightDecay}
                     position={[spotLightPos.x, spotLightPos.y, spotLightPos.z]}
-                    rotation={[0, -Math.PI, 0]}
+                    rotation={[spotLightRotation.x, spotLightRotation.y, spotLightRotation.z]}
                   />
                 </group>
         )}
