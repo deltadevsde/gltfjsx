@@ -237,6 +237,7 @@ function parse(fileName, gltf, options = {}) {
     let materialControls = materials.map((mat, i) => {
       let hasClearCoat = mat.hasOwnProperty('clearcoat')
       let hasClearCoatRoughness = mat.hasOwnProperty('clearcoatRoughness')
+
       return `
         const { model_color${i}, metalness${i}, roughness${i}${hasClearCoat ? ', clearcoat' + i : ``}${
         hasClearCoatRoughness ? ', clearcoatRoughness' + i : ``
@@ -513,7 +514,11 @@ function parse(fileName, gltf, options = {}) {
         ctx_roughness${i}: ${types ? 'number' : '1'},
         ${hasClearCoat ? `ctx_clearcoat${i}: ${types ? 'number' : '0'},` : ``} 
         ${hasClearCoatRoughness ? `ctx_clearcoatRoughness${i}: ${types ? 'number' : '0'},` : ``}
-        ctx_model_color${i}: ${types ? '{r:number, b:number, g:number}' : '{ r: 255, b: 255, g: 255 }'}
+        ctx_model_color${i}: ${
+        types
+          ? '{r:number, b:number, g:number}'
+          : `{ r: ${mat.color.r * 255}, g: ${mat.color.g * 255}, b: ${mat.color.b * 255} }`
+      }
         `
     })
   }
@@ -531,7 +536,7 @@ function parse(fileName, gltf, options = {}) {
   ctx_model_rotation: ${
     types
       ? `[${typeof rNbr(obj.rotation.x)}, ${typeof rNbr(obj.rotation.y)}, ${typeof rNbr(obj.rotation.z)}]`
-      : `[${rNbr(obj.rotation.x)}, ${rNbr(obj.rotation.y)}, ${rNbr(obj.rotation.z)}]`
+      : `[-Math.PI, -1, -Math.PI]`
   },
   ctx_model_scale: ${
     obj.scale.x === obj.scale.y && obj.scale.x === obj.scale.z
@@ -542,9 +547,13 @@ function parse(fileName, gltf, options = {}) {
       ? `[${typeof rNbr(obj.scale.x)}, ${typeof rNbr(obj.scale.y)}, ${typeof rNbr(obj.scale.z)}]`
       : `[${rNbr(obj.scale.x)}, ${rNbr(obj.scale.y)}, ${rNbr(obj.scale.z)}]`
   },
-    ctx_pointLight1Intensity: ${types ? typeof 0 : '0'} ,
-    ctx_pointLight1Decay: ${types ? typeof 0 : '0'} ,
-    ctx_pointLight1Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'} ,
+    ctx_ground1_metalness: ${types ? 'number' : '-1'},
+        ctx_ground1_roughness: ${types ? 'number' : '1'},
+
+        ctx_ground1_model_color: ${types ? '{r:number, b:number, g:number}' : '{ r: 255, b: 255, g: 255 }'},
+    ctx_pointLight1Intensity: ${types ? typeof 0 : '0'},
+    ctx_pointLight1Decay: ${types ? typeof 0 : '0'},
+    ctx_pointLight1Pos: ${types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: 0, y: 2, z: 1.5 }'},
     ctx_pointLight1Rotation: ${
       types ? `{ x: ${typeof 0}, y: ${typeof 2}, z: ${typeof 1.5} }` : '{ x: -Math.PI, y: -Math.PI, z: -Math.PI }'
     } ,
@@ -594,7 +603,8 @@ function parse(fileName, gltf, options = {}) {
     ctx_countStars: ${types ? typeof 5000 : '5000'},
     ctx_factorStars: ${types ? typeof 4 : '4'},
     ctx_saturationStars: ${types ? typeof 1 : '1'},
-    ctx_fadeStars: ${types ? typeof true : 'true'}
+    ctx_fadeStars: ${types ? typeof true : 'true'},
+    ctx_groundvisible : ${types ? typeof true : 'true'}
 
     
     `
@@ -700,6 +710,80 @@ function parse(fileName, gltf, options = {}) {
           ${createContext(objects, false, gltf.scene)}
         });
 
+        type Ground1Result = GLTF & {
+          nodes: {
+            ['SM_Env_RoadPiece_Damaged_01_(17)_Voxelized(Clone)']: THREE.Mesh;
+          };
+          materials: {
+            PolygonApocalypse_Material_Road_01_Triplanar: THREE.MeshStandardMaterial;
+          };
+        };
+
+        const Ground01 = ({ ...props }: JSX.IntrinsicElements['group']) => {
+          const group = useRef<THREE.Group>();
+          const { nodes, materials } = useGLTF('/Ground01.glb') as Ground1Result;
+          let context = useContext(PropContext);
+      
+          const { ground_1_position, ground_1_rotation, ground_1_modal_scale } =
+          useControls('Ground', {
+            Positioing: folder({
+              ground_1_position: [0, -0.75, 0],
+              ground_1_rotation: [0, 0, 0],
+              ground_1_modal_scale: 1,
+            }),
+          });
+      
+        const { ground1_model_color, ground1_metalness, ground1_roughness } =
+          useControls('PolygonApocalypse_Material_Road_01_Triplanar', {
+            ground1_metalness: {
+              value: context.ctx_ground1_metalness,
+              min: -1,
+              max: 1,
+              step: 0.1,
+            },
+            ground1_roughness: {
+              value: context.ctx_ground1_roughness,
+              min: -1,
+              max: 1,
+              step: 0.1,
+            },
+      
+            ground1_model_color: { r: materials.PolygonApocalypse_Material_Road_01_Triplanar.color.r * 255, g: 
+    materials.PolygonApocalypse_Material_Road_01_Triplanar.color.g * 255
+  , b: materials.PolygonApocalypse_Material_Road_01_Triplanar.color.b * 255},
+          });
+      
+          useFrame(() => {
+            materials.PolygonApocalypse_Material_Road_01_Triplanar.metalness =
+              ground1_metalness;
+            materials.PolygonApocalypse_Material_Road_01_Triplanar.roughness =
+              ground1_roughness;
+      
+            materials.PolygonApocalypse_Material_Road_01_Triplanar.color =
+              new THREE.Color(
+                \`rgb(\${ground1_model_color.r}, \${ground1_model_color.g}, \${ground1_model_color.b})\`
+              );
+          });
+      
+          return (
+            <group ref={group} {...props} dispose={null}>
+              <mesh
+                geometry={
+                  nodes['SM_Env_RoadPiece_Damaged_01_(17)_Voxelized(Clone)'].geometry
+                }
+                material={materials.PolygonApocalypse_Material_Road_01_Triplanar}
+                position={ground_1_position}
+                rotation={ground_1_rotation}
+                scale={ground_1_modal_scale}
+              />
+            </group>
+          );
+        };
+
+        
+      
+        useGLTF.preload('/Ground01.glb');
+
         function Model({ ${hasInstances ? 'instances, ' : ''}...props }${
     options.types ? ": JSX.IntrinsicElements['group']" : ''
   }) {
@@ -709,13 +793,57 @@ function parse(fileName, gltf, options = {}) {
   })${options.types ? ' as GLTFResult' : ''}${printAnimations(animations)}
   let context = useContext(PropContext);
 
+  const playAnim = () => {
+    const actionNameArray = Object.values([
+      'animation_0',
+      'animation_1',
+      'animation_2',
+      'animation_3',
+    ]);
+    const random = Math.floor(Math.random() * actionNameArray.length);
+    const chosenAnimation: string = actionNameArray[random];
+    const currentAnimation = actions[chosenAnimation];
+    currentAnimation?.setLoop(THREE.LoopOnce, 1);
+    currentAnimation!.clampWhenFinished = true;
+    currentAnimation?.play().reset();
+    actions?.animation_0?.play();
+  };
+
+  useFrame(() => {
+    if (
+      actions['animation_0']?.isRunning() ||
+      actions['animation_1']?.isRunning() ||
+      actions['animation_2']?.isRunning() ||
+      actions['animation_3']?.isRunning()
+    ) {
+      if (group.current) {
+        group.current.rotation.x = model_rotation[0];
+        group.current.rotation.y = model_rotation[1];
+        group.current.rotation.z = model_rotation[2];
+        group.current.position.x = model_position[0];
+        group.current.position.y = model_position[1];
+        group.current.position.z = model_position[2];
+      }
+    }
+  });
+
+  const afterRender = useCallback(() => {
+    if (group.current && group.current.position.y == 0) {
+      setTimeout(afterRender, 200);
+    } else if (!group.current) {
+      setTimeout(afterRender, 200);
+    }
+    actions?.animation_0?.play();
+  }, [actions, group.current]);
+
+  useEffect(afterRender, []);
   
   ${controls}
   
 
   
         return (
-                <group ref={group} {...props} dispose={null}>
+                <group {...props} ref={group} dispose={null} onPointerDown={playAnim} rotation={[model_rotation[0], model_rotation[1], model_rotation[2]]}>
                   ${scene}
                   <pointLight
                     intensity={pointLight1Intensity}
@@ -981,6 +1109,14 @@ useGLTF.preload('${url}')
     }),
   });
 
+  const {
+    groundVisible
+  } = useControls('Ground', {
+    General: folder({
+      groundVisible: true
+    })
+  });
+
   useEffect(() => {
     context.ctx_backgroundGradient =backgroundGradient;
     context.ctx_color1 =    color1;
@@ -1037,7 +1173,7 @@ useGLTF.preload('${url}')
           >
             <Leva flat oneLineLabels />
       
-            <Canvas className='h-full w-full' camera={{ position: [1, 2.5, 8] }}>
+            <Canvas className='h-full w-full' camera={{ position: [1.5, 1, 1.75] }}>
               <spotLight
                 position={positionSpotLight}
                 angle={angleSpotLight}
@@ -1092,9 +1228,10 @@ useGLTF.preload('${url}')
                 />
                 <OrbitControls makeDefault enableZoom={false} />
                 <Model />
+                {groundVisible && <Ground01 />}
               </Suspense>
             </Canvas>
-            <div className='absolute bottom-0 flex justify-center w-full'>
+             {/* <div className='absolute bottom-0 flex justify-center w-full'>
               <button
                 className='absolute bg-black bottom-2 px-2 py-16 rounded-full text-white text-xl w-3/12'
                 onClick={() =>
@@ -1106,7 +1243,7 @@ useGLTF.preload('${url}')
             </div>
             <div className='absolute bottom-0 left-0'>
               <input type='file' onChange={handleChange} />
-            </div>
+            </div> */}
           </div>
           )
         }
